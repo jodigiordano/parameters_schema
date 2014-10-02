@@ -227,7 +227,7 @@ In the base controller of your API, add this **helper**:
     # Validate the parameters of an action, using a schema.
     # Returns the validated parameters and throw exceptions on invalid input.
     def validate_params(&parameters_schema)
-      schema = ParametersSchema::Schema.new(parameters_schema)
+      schema = ParametersSchema::Schema.new(&parameters_schema)
       schema.validate!(params)
     end
 ```
