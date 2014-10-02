@@ -100,7 +100,7 @@ param :potatoes, type: { Array => String } # Accepts an array of strings.
 ```
 
 To deeper refine the schema of an object, you pass a block to the parameter:
-```
+``` ruby
 param :potatoe do # Implicitly of type Hash
   param :variety
   param :origin
@@ -108,13 +108,13 @@ end
 ```
 
 As you have seen above, a parameter can be of type `Array` but can also have the option `array`. Confusing, right? This option was introduced to simplify the `type` syntax. For example:
-```
+``` ruby
 param :potatoes, type: String, array: true   # This is equivalent...
 param :potatoes, type: { Array => String }   # ... to this.
 ```
 
 But this parameter truly shine with an array of objects:
-```
+``` ruby
 param :potatoes, array: true do
   param :variety
   param :origin
