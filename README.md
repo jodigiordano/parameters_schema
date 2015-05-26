@@ -245,7 +245,7 @@ In the base controller of your API, add this **exception handler**:
 Now in any controller where you want to validate the parameters, you can do:
 ``` ruby
 def operation
-    validated_params = validate_parameters do
+    validated_params = validate_params do
       # ...
     end
     # ...
