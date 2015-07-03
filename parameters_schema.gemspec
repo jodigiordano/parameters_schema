@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'parameters_schema'
-  s.version     = '0.42'
+  s.version     = '1.0.0'
   s.platform    = Gem::Platform::RUBY
   s.summary     = "Strict schema for request parameters"
   s.description = "Validates parameters of requests using a schema defined with a simple DSL"
