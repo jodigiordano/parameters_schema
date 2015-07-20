@@ -2,7 +2,7 @@
 
 ## *"A strict API is the best kind of API."*
 
-In this line of thought, **[strong_parameters](https://github.com/rails/strong_parameters)** lacks a few awesome validations that this gem provide.
+In this line of thought, **[strong_parameters](https://github.com/rails/strong_parameters)** lacks a few awesome validations that this gem provides.
 
 For example, let's say you want your operation `create` to require a `Fixnum` parameter between 1 and 99. With strong_parameters, you're out of luck. With this gem, you simply write in your controller:
 ``` ruby
