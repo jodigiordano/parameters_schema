@@ -1,10 +1,8 @@
 # Parameters Schema
 
-## *"A strict API is the best kind of API."*
+This gem is an alternative to **[strong_parameters](https://github.com/rails/strong_parameters)** to validate data at the controller level.
 
-In this line of thought, **[strong_parameters](https://github.com/rails/strong_parameters)** lacks a few awesome validations that this gem provides.
-
-For example, let's say you want your operation `create` to require a `Fixnum` parameter between 1 and 99. With strong_parameters, you're out of luck. With this gem, you simply write in your controller:
+For example, let's say you want your operation `create` to require a `Fixnum` parameter between `1` and `99`:
 ``` ruby
 class Api::PeopleController < Api::BaseController
   def create
@@ -12,7 +10,7 @@ class Api::PeopleController < Api::BaseController
       param :age, type: Fixnum, allow: (1..99)
     end
 
-    # Do something with the validated parameters.
+    @person = Person.create!(validated_params)
   end
 end
 ```
@@ -20,30 +18,57 @@ end
 So when you use this controller:
 ``` ruby
 > app.post 'api/people', age: 12  # validated_params = { age: 12 }
-> app.post 'api/people', age: 100 # throws a ParameterSchema::InvalidParameters 
+> app.post 'api/people', age: 100 # throws a ParameterSchema::InvalidParameters
 ```
 
-## Why use this gem instead of strong_parameters
+## Why use this gem instead of *strong_parameters*:
 
-* You prefer a procedural approach (via a DSL) over a declarative one.
-* You want more control over the parameters of your API, at the type and format level.
-* You want to do things differently, you darn hipster ;)
+* You want more control over the parameters of your API, at the *type* and *format* level.
+* You want a strict API that will only accept well-formed requests.
+* You don't grasp the *strong_parameters* syntax and wants something more like a DSL.
+* You want to validate data outside of Rails.
 
 ## Installation
 
-Add in your Gemfile:
+Add in your `Gemfile`:
 ``` ruby
 gem 'parameters_schema'
 ```
 
-Add in your project:
+Add in your project (not required for Rails):
 ``` ruby
 require 'parameters_schema'
 ```
 
+## Quick start
+
+Read this then _Integrate with Rails_ if you want to use this gem quickly.
+
+Let's take the example at the beginning of this README, with more details:
+
+``` ruby
+class Api::PeopleController < Api::BaseController
+  def create
+    # 1. For each request, you define a schema (i.e. the parameters of the request).
+    schema = ParametersSchema::Schema.new do
+      param :age, type: Fixnum, allow: (1..99)
+    end
+
+    # 2. When a user makes a request, you validate it against the schema.
+    # - When the request is invalid, an exception is raised.
+    # - When the request is valid, you receive a sanitized hash.
+    validated_params = schema.validate!(params)
+
+    @person = Person.create!(validated_params)
+  end
+end
+```
+
+Now, _Integrate with Rails_ gives pointers on how to simplify all this.
+
 ## Schema
 
-The schema is the heart of this gem.  It provides a simple DSL to express an operation's parameters.
+The schema is the heart of this gem. With a simple DSL, you define the parameters of a request.
 
 Creating a schema:
 ``` ruby
@@ -52,16 +77,18 @@ schema = ParametersSchema::Schema.new do
   # ... but an empty schema is also valid.
 end
 ```
+
 Validating parameters against a schema:
 ``` ruby
 params = { potatoe: 'Eramosa' }
-schema.validate!(params) 
+schema.validate!(params)
 ```
 
 The minimal representation of a parameter is:
 ``` ruby
 param :potatoe
 ```
+
 This represents a `required` parameter of type `String` accepting any characters and which doesn't allow nil or empty values.
 
 The valid options for a parameter are:
@@ -75,7 +102,7 @@ The valid options for a parameter are:
 
 ### Parameter types
 
-The available types are: 
+The available types are:
 ``` ruby
 * String
 * Symbol
@@ -137,9 +164,9 @@ end
 
 ### The `allow` and `deny` options
 
-By default, the value of a parameter can be any one in the spectrum of a type, with the exception of nil and empty. The `allow` and `deny` options can be used to further refine the accepted values.
+By default, the value of a parameter can be any one in the spectrum of a type, with the exception of `nil` and empty. The `allow` and `deny` options can be used to further refine the accepted values.
 
-To accept nil or empty values:
+To accept `nil` or empty values:
 ``` ruby
 param :potatoe, allow: :nil
 # => accepts nil, 'Kennebec' but not ''.
@@ -150,7 +177,7 @@ param :potatoe, allow: :empty
 param :potatoe, allow: [:nil, :empty]
 # => accepts nil, '' and 'Kennebec'
 ```
-Of course, this *nil* or *empty* restriction doesn't make sense for all the types so it will only be applied when it does.
+Of course, this `nil` or `empty` restriction doesn't make sense for all the types so it will only be applied when it does.
 
 To accept predefined values:
 ``` ruby
@@ -220,12 +247,13 @@ The possible error codes are (in the order the are validated):
 
 ## Integrate with Rails
 
-This gem can be used outside of Rails but was created with Rails in mind. For example, the parameters `controller, action, format` are skipped by default (see Options section to override this behavior) and the parameters are defined in a `Hash`. However, this gem doesn't insinuate itself in your project so you must manually add it in your controllers or anywhere else that make sense to you. Here is a little recipe to add validation in your API pipeline:
+This gem can be used outside of Rails but was created with Rails in mind. For example, the parameters `controller`, `action` and `format` are skipped by default (see Options section to override this behavior) and the parameters are defined in a `Hash`. However, this gem doesn't insinuate itself in your project so you must manually add it in your controllers or anywhere else that make sense to you. Here is a little recipe to add validation in your API pipeline:
 
 In the base controller of your API, add this **helper**:
 ``` ruby
     # Validate the parameters of an action, using a schema.
     # Returns the validated parameters and throw exceptions on invalid input.
+    # Note: this helper could be refined to cache the schemas.
     def validate_params(&parameters_schema)
       schema = ParametersSchema::Schema.new(&parameters_schema)
       schema.validate!(params)
@@ -274,10 +302,19 @@ Available options:
 
 Yes, please. Bug fixes, new features, refactoring, unit tests. Send your precious pull requests.
 
+### Developing this gem
+
+1. Fork this repository.
+2. Clone your fork.
+3. (Optional) Prepare it with `rbenv` or `RVM`. Ex: `echo 2.3.0 > .ruby-version`.
+4. `bundle install` to install the gems.
+5. `rake test` to launch the tests suite.
+6. Make your changes and send me pull requests.
+
 ### Ideas
 
 * Array of arrays of ...
-* Min/Max for numeric values
+* `min` and `max` options for numeric values (instead of `allow: (min..max)`)
 * More `allow` options
 * Better refine error codes
 
