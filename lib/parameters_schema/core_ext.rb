@@ -12,7 +12,6 @@ class Object
   #
   def numeric?
     return true if self.kind_of?(Numeric)
-    return true if self.to_s =~ /^\d+$/
     Float(self)
     true
   rescue
