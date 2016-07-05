@@ -96,9 +96,16 @@ The valid options for a parameter are:
 * required  # Whether the parameter is required. Default: true.
 * type      # The type of the parameter. Default: String.
 * allow     # The allowed values of the parameter. Default: :any.
-* deny     # The denied values of the parameter. Default: :none.
+* deny      # The denied values of the parameter. Default: :none.
 * array     # Whether the parameter is an array. Default: false.
+* default   # Default value when the parameter is missing. Default: nil.
 ```
+
+Notes on `default` option:
+
+* When set, the `required` option becomes automatically `false`.
+* When set, the provided value is always kept in sanitized hash, even if the value is `nil`.
+* Cannot be used on a `array` or `hash` type (but can be used on the fields of an hash!).
 
 ### Parameter types
 

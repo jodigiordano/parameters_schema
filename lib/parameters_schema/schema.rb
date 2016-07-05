@@ -19,7 +19,8 @@ module ParametersSchema
     private
 
     def param(name, options = {}, &inner_params)
-      options[:required] = !options.has_key?(:required) || options[:required].present?
+      options[:required] = (!options.has_key?(:required) || options[:required].present?) && !options.has_key?(:default)
+      options[:default_is_nil] = options.has_key?(:default) && options[:default].nil?
 
       options[:type] = [options[:type] || String].flatten
       options[:allow] = [options[:allow].present? ? options[:allow] : ParametersSchema::Options.any_keyword].flatten
@@ -119,8 +120,10 @@ module ParametersSchema
 
       if options[:required] && !options[:parent].has_key?(name)
         error = ParametersSchema::ErrorCode::MISSING
-      elsif options[:parent].has_key?(name)
+      elsif options[:parent].has_key?(name) && !options[:parent][name].nil?
         value = options[:parent][name]
+      else
+        value = options[:default]
       end
 
       [value, error]
@@ -129,7 +132,7 @@ module ParametersSchema
     def __validate_param_value_nil(value, options)
       error = nil
 
-      if !options[:allow].include?(ParametersSchema::Options.nil_keyword) && value.nil?
+      if !options[:default_is_nil] && !options[:allow].include?(ParametersSchema::Options.nil_keyword) && value.nil?
         error = ParametersSchema::ErrorCode::NIL
       end
 
@@ -227,13 +230,13 @@ module ParametersSchema
         error = ParametersSchema::ErrorCode::DISALLOWED unless value.respond_to?(:to_sym)
         value = value.to_sym if error.blank? # cast to right type.
       elsif type == Date
-        begin 
+        begin
           value = value.kind_of?(String) ? Date.parse(value) : value.to_date
         rescue
           error = ParametersSchema::ErrorCode::DISALLOWED
         end
       elsif type == DateTime
-        begin 
+        begin
           value = value.kind_of?(String) ? DateTime.parse(value) : value.to_datetime
         rescue
           error = ParametersSchema::ErrorCode::DISALLOWED
@@ -268,7 +271,14 @@ module ParametersSchema
     end
 
     def __stop_validation(name, value, error, options)
-      { param: name, error: error, value: value, keep_if_nil: options[:allow].include?(ParametersSchema::Options.nil_keyword) }
+      {
+        param: name,
+        error: error,
+        value: value,
+        keep_if_nil:
+          options[:allow].include?(ParametersSchema::Options.nil_keyword) ||
+          (value.nil? && options[:default_is_nil] )
+      }
     end
 
     def __handle_errors
